@@ -39,7 +39,7 @@ int major, minor;
 char *kernel_buffer;
 
 struct cdev my_cdev;
-int actual rx_size = 0;
+int actual_rx_size = 0;
 
 typedef struct myds
 {
@@ -85,6 +85,7 @@ int init_module(void)
     registers = register_chrdev_region(devno, 1, DEVICE_NAME);
     printk(KERN_INFO "Register chardev suceeded 1: %d\n", registers);
     cdev_init(&my_cdev, &fops);
+    my_cdev.owner = THIS_MODULE;
 
     result = cdev_add(&my_cdev, devno, 1);
     printk(KERN_INFO "Register chardev suceeded 2: %d\n", result);
