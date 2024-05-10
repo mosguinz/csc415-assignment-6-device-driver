@@ -63,13 +63,13 @@ static int my_open(struct inode *inode, struct file *fs)
 static int my_close(struct inode *inode, struct file *fs)
 {
     struct myds *ds;
-    ds(stricy myds *) fs->private_data;
+    ds = (struct myds *)fs->private_data;
     vfree(ds);
     return 0;
 }
 
 // file operations data structure
-struct FileOperations fops = {
+struct file_operations fops = {
     .open = my_open,
     .release = my_close,
     .write = my_write,
