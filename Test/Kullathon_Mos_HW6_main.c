@@ -20,36 +20,35 @@
 
 #define READ_BUFFER_SIZE 512
 #define DEV_LOCATION "/dev/salad"
+#define MODE_ENCRYPT 'e'
+#define MODE_DECRYPT 'd'
 
 int main(int argc, char const *argv[])
 {
     int fd, info;
-    long n1, n2, n3;
-    char Message[] = {"test message"};
-    char read_buffer[READ_BUFFER_SIZE];
-
     if (argc < 3)
     {
-        fprintf(stderr, "usage: main [e]ncrypt|[d]ecrypt message\n");
+        fprintf(stderr, "usage: main [e]ncrypt|[d]ecrypt text\n");
         return -1;
     }
 
     char mode = argv[1][0];
-    char *message = argv[2];
+    char *text = argv[2];
 
-    if (mode == 'e')
+    switch (mode)
     {
-        printf("Encrypting %s\n", message);
-    }
-    else if (mode == 'd')
-    {
-        printf("Decrypting %s\n", message);
-    }
-    else
-    {
+    case MODE_ENCRYPT:
+        printf("Encrypting: %s\n", text);
+        break;
+    case MODE_DECRYPT:
+        printf("Decrypting: %s\n", text);
+        break;
+    default:
         printf("Invalid mode\n");
         return -1;
-    }
+    };
+
+    // Open the device driver
 
     fd = open(DEV_LOCATION, O_RDWR); // read and write
     printf("Returned from open(): %d\n", fd);
@@ -62,9 +61,13 @@ int main(int argc, char const *argv[])
     }
     printf("Device open success\n");
 
-    char *text = "malloc(READ_BUFFER_SIZE)";
+    // Write text to driver
     write(fd, text, strlen(text));
 
+    // Set mode and execute encrypt/decrypt
+    ioctl(fd, mode);
+
+    // Read from driver
     char *res = malloc(READ_BUFFER_SIZE);
     read(fd, res, strlen(text));
 
