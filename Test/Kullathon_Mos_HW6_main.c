@@ -28,7 +28,30 @@ int main(int argc, char const *argv[])
     char Message[] = {"test message"};
     char read_buffer[READ_BUFFER_SIZE];
 
-    fd = open(DEV_LOCATION, O_WRONLY);
+    if (argc < 3)
+    {
+        fprintf(stderr, "usage: main [e]ncrypt|[d]ecrypt message\n");
+        return -1;
+    }
+
+    char mode = argv[1][0];
+    char *message = argv[2];
+
+    if (mode == 'e')
+    {
+        printf("Encrypting %s\n", message);
+    }
+    else if (mode == 'd')
+    {
+        printf("Decrypting %s\n", message);
+    }
+    else
+    {
+        printf("Invalid mode\n");
+        return -1;
+    }
+
+    fd = open(DEV_LOCATION, O_RDWR); // read and write
     printf("Returned from open(): %d\n", fd);
 
     if (fd < 0)
@@ -39,12 +62,20 @@ int main(int argc, char const *argv[])
     }
     printf("Device open success\n");
 
-    for (long i = 0; i < 30; i++)
-    {
-        n1 = write(fd, "testing", i * 2);
-        n2 = ioctl(fd, 3, &info);
-        printf("Wrote to %d, that returned %ld, count %d - Return from ioctl %i\n", fd, n1, i, n2);
-    }
+    char *text = "malloc(READ_BUFFER_SIZE)";
+    write(fd, text, strlen(text));
+
+    char *res = malloc(READ_BUFFER_SIZE);
+    read(fd, res, strlen(text));
+
+    printf("Coming from read: %s\n", res);
+
+    // for (long i = 0; i < 30; i++)
+    // {
+    //     n1 = write(fd, "testing", i * 2);
+    //     n2 = ioctl(fd, 3, &info);
+    //     printf("Wrote to %d, that returned %ld, count %d - Return from ioctl %i\n", fd, n1, i, n2);
+    // }
 
     close(fd);
     return 0;
