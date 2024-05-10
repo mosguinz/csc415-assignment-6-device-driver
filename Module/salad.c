@@ -54,7 +54,6 @@ struct file_operations fops = {
     .unlocked_ioctl = my_io_ctl,
     .owner = THIS_MODULE};
 
-
 static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, loff_t *off)
 {
     struct myds *ds;
@@ -107,9 +106,10 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
         return -1;
     }
     count = (int *)data;
-    int bytes_not_copied = copy_to_user(count, &(ds->count), sizeof(struct myds));
+    int bytes_not_copied = copy_to_user(count, &(ds->count), sizeof(int));
     return bytes_not_copied;
 }
+
 int init_module(void)
 {
     int result, registers;
