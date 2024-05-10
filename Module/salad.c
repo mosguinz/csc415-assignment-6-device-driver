@@ -31,12 +31,14 @@ static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *
 static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, loff_t *off);
 static int my_open(struct inode *inode, struct file *fs);
 static int my_close(struct inode *inode, struct file *fs);
-static int encrypt(int key);
-static int decrypt(int key);
 static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data);
 
+#define SHIFT 5
+#define MAX_SIZE 512
+static int encrypt(void);
+static int decrypt(void);
+
 int major, minor;
-char *kernel_buffer;
 
 struct cdev my_cdev;
 int actual_rx_size = 0;
@@ -112,9 +114,22 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
         printk(KERN_ERR "died in myioctl\n");
         return -1;
     }
-    count = (int *)data;
-    int bytes_not_copied = copy_to_user(count, &(ds->count), sizeof(int));
-    return bytes_not_copied;
+    // count = (int *)data;
+    // int bytes_not_copied = copy_to_user(count, &(ds->text), sizeof(ds->text));
+
+    return 0;
+}
+
+static int encrypt()
+{
+    printk(KERN_INFO "In encrypt\n");
+    return 0;
+}
+
+static int decrypt()
+{
+    printk(KERN_INFO "In decrypt\n");
+    return 0;
 }
 
 int init_module(void)
