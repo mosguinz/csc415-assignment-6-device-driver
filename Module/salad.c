@@ -46,6 +46,24 @@ typedef struct myds
     int count;
 } myds;
 
+static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, loff_t *off)
+{
+    struct myds *ds;
+    ds = (struct myds *)fs->private_data;
+    ds->count++;
+    printk(KERN_INFO "Written %lu on write number %d", hsize, ds->count);
+    return hsize;
+}
+
+static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *off)
+{
+    struct myds *ds;
+    ds = (struct myds *)fs->private_data;
+    ds->count++;
+    printk(KERN_INFO "Read %lu on write number %d", hsize, ds->count);
+    return 0;
+}
+
 static int my_open(struct inode *inode, struct file *fs)
 {
     struct myds *ds;
@@ -68,11 +86,28 @@ static int my_close(struct inode *inode, struct file *fs)
     return 0;
 }
 
+static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
+{
+    int *count;
+    struct myds *ds;
+    ds = (struct myds *)fs->private_data;
+
+    if (command != 3)
+    {
+        printk(KERN_ERR "died in myioctl\n");
+        return -1;
+    }
+    count = (int *)data;
+    int bytes_not_copied = copy_to_user(count, &(ds->count), sizeof(struct myds));
+    return bytes_not_copied;
+}
+
 // file operations data structure
 struct file_operations fops = {
     .open = my_open,
     .release = my_close,
     .write = my_write,
+    .read = my_read,
     .unlocked_ioctl = my_io_ctl,
     .owner = THIS_MODULE};
 
