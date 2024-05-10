@@ -22,6 +22,8 @@
 #define MY_MAJOR 415
 #define MY_MINOR 0
 #define DEVICE_NAME "salad"
+#define MODE_ENCRYPT 'e'
+#define MODE_DECRYPT 'd'
 
 MODULE_AUTHOR("Mos Kullathon");
 MODULE_DESCRIPTION("A simple device driver that encrypts text usinga Caesar cipher.");
@@ -35,8 +37,8 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
 
 #define SHIFT 5
 #define MAX_SIZE 512
-static int encrypt(void);
-static int decrypt(void);
+static int encrypt(char *);
+static int decrypt(char *);
 
 int major, minor;
 
@@ -45,8 +47,8 @@ int actual_rx_size = 0;
 
 typedef struct myds
 {
-    char *text;
-    int isEncrypted;
+    char *text;      // text to encrypt/decrypt
+    int isEncrypted; // 1 if encrypted, 0 if not
 } myds;
 
 struct file_operations fops = {
@@ -62,9 +64,6 @@ static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, l
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
     copy_from_user(ds->text, buf + *off, hsize);
-
-    printk(KERN_INFO "In write: %s\n", ds->text);
-    printk(KERN_INFO "Written %lu on write number %s", hsize, ds->text);
     return hsize;
 }
 
@@ -73,9 +72,6 @@ static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
     copy_to_user(buf + *off, ds->text, hsize);
-
-    printk(KERN_INFO "In read: %s\n", ds->text);
-    printk(KERN_INFO "Read %lu on write number %s", hsize, ds->text);
     return 0;
 }
 
@@ -109,26 +105,32 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
 
-    if (command != 3)
+    switch (command)
     {
+    case MODE_ENCRYPT:
+        encrypt(ds->text);
+        ds->isEncrypted = 1;
+        break;
+    case MODE_DECRYPT:
+        decrypt(ds->text);
+        ds->isEncrypted = 0;
+        break;
+    default:
         printk(KERN_ERR "died in myioctl\n");
         return -1;
     }
-    // count = (int *)data;
-    // int bytes_not_copied = copy_to_user(count, &(ds->text), sizeof(ds->text));
-
     return 0;
 }
 
-static int encrypt()
+static int encrypt(char *text)
 {
-    printk(KERN_INFO "In encrypt\n");
+    printk(KERN_INFO "Encrypting: %s\n", text);
     return 0;
 }
 
-static int decrypt()
+static int decrypt(char *text)
 {
-    printk(KERN_INFO "In decrypt\n");
+    printk(KERN_INFO "Decrypting: %s\n", text);
     return 0;
 }
 
