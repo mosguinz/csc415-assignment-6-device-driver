@@ -37,6 +37,7 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
 
 #define SHIFT 5
 #define MAX_SIZE 512
+#define MAX_RANGE 255 // this is the ASCII range
 static int encrypt(char *);
 static int decrypt(char *);
 
@@ -125,12 +126,22 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
 static int encrypt(char *text)
 {
     printk(KERN_INFO "Encrypting: %s\n", text);
+    for (size_t i = 0; i < strlen(text); i++)
+    {
+        text[i] = (text[i] + SHIFT) % MAX_RANGE;
+    }
+    printk(KERN_INFO "Encrypted as: %s\n", text);
     return 0;
 }
 
 static int decrypt(char *text)
 {
     printk(KERN_INFO "Decrypting: %s\n", text);
+    for (size_t i = 0; i < strlen(text); i++)
+    {
+        text[i] = (text[i] - SHIFT) % MAX_RANGE;
+    }
+    printk(KERN_INFO "Decrypted as: %s\n", text);
     return 0;
 }
 
