@@ -67,7 +67,12 @@ static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, l
 {
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
-    copy_from_user(ds->text, buf + *off, hsize);
+    int not_copied = copy_from_user(ds->text, buf + *off, hsize);
+    if (not_copied)
+    {
+        printk(KERN_ERR "copy_from_user failed, %d was not copied\n", not_copied);
+        return -1;
+    }
     return hsize;
 }
 
@@ -76,7 +81,12 @@ static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *
 {
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
-    copy_to_user(buf + *off, ds->text, hsize);
+    int not_copied = copy_to_user(buf + *off, ds->text, hsize);
+    if (not_copied)
+    {
+        printk(KERN_ERR "copy_to_user failed, %d was not copied\n", not_copied);
+        return -1;
+    }
     return 0;
 }
 
@@ -109,7 +119,6 @@ static int my_close(struct inode *inode, struct file *fs)
 /** Receive command from user and invoke the appropriate function. */
 static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
 {
-    int *count;
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
 
