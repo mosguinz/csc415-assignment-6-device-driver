@@ -23,17 +23,30 @@
 #define MODE_ENCRYPT 'e'
 #define MODE_DECRYPT 'd'
 
+void show_help()
+{
+    printf("usage: main ( h | e[ncrypt] | d[ecrypt] ) text\n");
+    printf("For example: use 'main e abcdef' to encrypt the text 'abcdef'\n");
+    printf("             use 'main d fghijk' to decrypt the text 'fghijk'\n");
+}
+
 int main(int argc, char const *argv[])
 {
     if (argc < 3)
     {
-        fprintf(stderr, "usage: main [e]ncrypt|[d]ecrypt text\n");
+        fprintf(stderr, "Not enough arguments\n");
+        show_help();
         return -1;
     }
 
     // Parse launch arguments
     const char mode = argv[1][0];
     const char *text = argv[2];
+    if (mode == 'h')
+    {
+        show_help();
+        return 0;
+    }
     if (mode != MODE_DECRYPT && mode != MODE_ENCRYPT)
     {
         fprintf(stderr, "Invalid mode: must be 'e' or 'd': got '%c'\n", mode);
