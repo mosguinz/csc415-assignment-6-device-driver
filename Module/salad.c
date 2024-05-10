@@ -46,6 +46,15 @@ typedef struct myds
     int count;
 } myds;
 
+struct file_operations fops = {
+    .open = my_open,
+    .release = my_close,
+    .write = my_write,
+    .read = my_read,
+    .unlocked_ioctl = my_io_ctl,
+    .owner = THIS_MODULE};
+
+
 static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, loff_t *off)
 {
     struct myds *ds;
@@ -101,16 +110,6 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
     int bytes_not_copied = copy_to_user(count, &(ds->count), sizeof(struct myds));
     return bytes_not_copied;
 }
-
-// file operations data structure
-struct file_operations fops = {
-    .open = my_open,
-    .release = my_close,
-    .write = my_write,
-    .read = my_read,
-    .unlocked_ioctl = my_io_ctl,
-    .owner = THIS_MODULE};
-
 int init_module(void)
 {
     int result, registers;
