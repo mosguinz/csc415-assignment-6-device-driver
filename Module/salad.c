@@ -35,8 +35,8 @@ static int my_open(struct inode *inode, struct file *fs);
 static int my_close(struct inode *inode, struct file *fs);
 static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data);
 
-#define SHIFT 5
-#define MAX_SIZE 512
+#define SHIFT_VALUE 5 // how many values to shift
+#define MAX_SIZE 512  // buffer size
 #define MAX_RANGE 255 // this is the ASCII range
 static int encrypt(char *);
 static int decrypt(char *);
@@ -46,12 +46,14 @@ int major, minor;
 struct cdev my_cdev;
 int actual_rx_size = 0;
 
+/** Struct to hold text and whether it is encrypted. */
 typedef struct myds
 {
     char *text;      // text to encrypt/decrypt
     int isEncrypted; // 1 if encrypted, 0 if not
 } myds;
 
+/** File operations struct. */
 struct file_operations fops = {
     .open = my_open,
     .release = my_close,
@@ -60,6 +62,7 @@ struct file_operations fops = {
     .unlocked_ioctl = my_io_ctl,
     .owner = THIS_MODULE};
 
+/** Write the text from the user into our `myds` */
 static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, loff_t *off)
 {
     struct myds *ds;
@@ -68,6 +71,7 @@ static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, l
     return hsize;
 }
 
+/** Read the text from `myds` to return to user. */
 static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *off)
 {
     struct myds *ds;
@@ -76,6 +80,7 @@ static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *
     return 0;
 }
 
+/** Initialize `myds` and write to the file descriptor. */
 static int my_open(struct inode *inode, struct file *fs)
 {
     struct myds *ds;
@@ -91,6 +96,7 @@ static int my_open(struct inode *inode, struct file *fs)
     return 0;
 }
 
+/** Free `myds` and close the file descriptor. */
 static int my_close(struct inode *inode, struct file *fs)
 {
     struct myds *ds;
@@ -100,6 +106,7 @@ static int my_close(struct inode *inode, struct file *fs)
     return 0;
 }
 
+/** Receive command from user and invoke the appropriate function. */
 static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
 {
     int *count;
@@ -117,34 +124,38 @@ static long my_io_ctl(struct file *fs, unsigned int command, unsigned long data)
         ds->isEncrypted = 0;
         break;
     default:
-        printk(KERN_ERR "died in myioctl\n");
+        printk(KERN_ERR "io_ctl: invalid mode, expecting 'e' or 'd', got %c\n",
+               command);
         return -1;
     }
     return 0;
 }
 
+/** Simple Cesar cipher shift to encrypt given text. */
 static int encrypt(char *text)
 {
     printk(KERN_INFO "Encrypting: %s\n", text);
     for (size_t i = 0; i < strlen(text); i++)
     {
-        text[i] = (text[i] + SHIFT) % MAX_RANGE;
+        text[i] = (text[i] + SHIFT_VALUE) % MAX_RANGE;
     }
     printk(KERN_INFO "Encrypted as: %s\n", text);
     return 0;
 }
 
+/** Simple Cesar cipher shift to decrypt given text. */
 static int decrypt(char *text)
 {
     printk(KERN_INFO "Decrypting: %s\n", text);
     for (size_t i = 0; i < strlen(text); i++)
     {
-        text[i] = (text[i] - SHIFT) % MAX_RANGE;
+        text[i] = (text[i] - SHIFT_VALUE) % MAX_RANGE;
     }
     printk(KERN_INFO "Decrypted as: %s\n", text);
     return 0;
 }
 
+/** Register salad a device node in /dev */
 int init_module(void)
 {
     int result, registers;
@@ -158,7 +169,7 @@ int init_module(void)
 
     result = cdev_add(&my_cdev, devno, 1);
     printk(KERN_INFO "Register chardev suceeded 2: %d\n", result);
-    printk(KERN_INFO "Welcome - salad driver is loaded.\n");
+    printk(KERN_INFO "Welcome - `salad` driver is loaded.\n");
     if (result < 0)
     {
         printk(KERN_ERR "Register chardev failed: %d\n", result);
@@ -166,11 +177,12 @@ int init_module(void)
     return result;
 }
 
+/** Remove driver. */
 void cleanup_module(void)
 {
     dev_t devno;
     devno = MKDEV(MY_MAJOR, MY_MINOR);
     unregister_chrdev_region(devno, 1);
     cdev_del(&my_cdev);
-    printk(KERN_INFO "Exiting salad driver!\n");
+    printk(KERN_INFO "Goodbye - `salad` driver is removed.\n");
 }
