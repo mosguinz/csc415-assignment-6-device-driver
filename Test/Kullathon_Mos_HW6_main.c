@@ -42,11 +42,15 @@ int main(int argc, char const *argv[])
     // Parse launch arguments
     const char mode = argv[1][0];
     const char *text = argv[2];
+
+    // Show help message
     if (mode == 'h')
     {
         show_help();
         return 0;
     }
+
+    // Incorrect mode
     if (mode != MODE_DECRYPT && mode != MODE_ENCRYPT)
     {
         fprintf(stderr, "Invalid mode: must be 'e' or 'd': got '%c'\n", mode);
