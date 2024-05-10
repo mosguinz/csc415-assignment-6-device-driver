@@ -25,13 +25,13 @@
 
 int main(int argc, char const *argv[])
 {
-    int fd, info;
     if (argc < 3)
     {
         fprintf(stderr, "usage: main [e]ncrypt|[d]ecrypt text\n");
         return -1;
     }
 
+    // Parse launch arguments
     char mode = argv[1][0];
     char *text = argv[2];
 
@@ -49,14 +49,10 @@ int main(int argc, char const *argv[])
     };
 
     // Open the device driver
-
-    fd = open(DEV_LOCATION, O_RDWR); // read and write
-    printf("Returned from open(): %d\n", fd);
-
+    int fd = open(DEV_LOCATION, O_RDWR); // read and write
     if (fd < 0)
     {
         printf("Device open error\n");
-        perror("Device file open error");
         return -1;
     }
     printf("Device open success\n");
@@ -70,15 +66,12 @@ int main(int argc, char const *argv[])
     // Read from driver
     char *res = malloc(READ_BUFFER_SIZE);
     read(fd, res, strlen(text));
+    printf("Result: %s\n", res);
 
-    printf("Coming from read: %s\n", res);
-
-    // for (long i = 0; i < 30; i++)
-    // {
-    //     n1 = write(fd, "testing", i * 2);
-    //     n2 = ioctl(fd, 3, &info);
-    //     printf("Wrote to %d, that returned %ld, count %d - Return from ioctl %i\n", fd, n1, i, n2);
-    // }
+    // Now, do the reverse
+    ioctl(fd, mode == MODE_ENCRYPT ? MODE_DECRYPT : MODE_ENCRYPT);
+    read(fd, res, strlen(text));
+    printf("Result: %s\n", res);
 
     close(fd);
     return 0;
