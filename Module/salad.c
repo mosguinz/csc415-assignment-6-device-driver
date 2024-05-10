@@ -24,7 +24,7 @@
 #define DEVICE_NAME "salad"
 
 MODULE_AUTHOR("Mos Kullathon");
-MODULE_DESCRIPTION("A simple device driver that encrypts text usinga Caesar cipher.")
+MODULE_DESCRIPTION("A simple device driver that encrypts text usinga Caesar cipher.");
 MODULE_LICENSE("GPL");
 
 static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *off);
