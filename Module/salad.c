@@ -43,7 +43,8 @@ int actual_rx_size = 0;
 
 typedef struct myds
 {
-    int count;
+    char *text;
+    int isEncrypted;
 } myds;
 
 struct file_operations fops = {
@@ -58,8 +59,10 @@ static ssize_t my_write(struct file *fs, const char __user *buf, size_t hsize, l
 {
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
-    ds->count++;
-    printk(KERN_INFO "Written %lu on write number %d", hsize, ds->count);
+    copy_from_user(ds->text, buf + *off, hsize);
+
+    printk(KERN_INFO "In write: %s\n", ds->text);
+    printk(KERN_INFO "Written %lu on write number %s", hsize, ds->text);
     return hsize;
 }
 
@@ -67,8 +70,10 @@ static ssize_t my_read(struct file *fs, char __user *buf, size_t hsize, loff_t *
 {
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
-    ds->count++;
-    printk(KERN_INFO "Read %lu on write number %d", hsize, ds->count);
+    copy_to_user(buf + *off, ds->text, hsize);
+
+    printk(KERN_INFO "In read: %s\n", ds->text);
+    printk(KERN_INFO "Read %lu on write number %s", hsize, ds->text);
     return 0;
 }
 
@@ -81,7 +86,8 @@ static int my_open(struct inode *inode, struct file *fs)
         printk(KERN_ERR "Cannot vmalloc, File not opened\n");
         return -1;
     }
-    ds->count = 0;
+    ds->text = vmalloc(MAX_SIZE);
+    ds->isEncrypted = 0;
     fs->private_data = ds;
     return 0;
 }
@@ -90,6 +96,7 @@ static int my_close(struct inode *inode, struct file *fs)
 {
     struct myds *ds;
     ds = (struct myds *)fs->private_data;
+    vfree(ds->text);
     vfree(ds);
     return 0;
 }
