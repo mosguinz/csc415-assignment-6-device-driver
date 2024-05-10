@@ -32,30 +32,21 @@ int main(int argc, char const *argv[])
     }
 
     // Parse launch arguments
-    char mode = argv[1][0];
-    char *text = argv[2];
-
-    switch (mode)
+    const char mode = argv[1][0];
+    const char *text = argv[2];
+    if (mode != MODE_DECRYPT && mode != MODE_ENCRYPT)
     {
-    case MODE_ENCRYPT:
-        printf("Encrypting: %s\n", text);
-        break;
-    case MODE_DECRYPT:
-        printf("Decrypting: %s\n", text);
-        break;
-    default:
-        printf("Invalid mode\n");
+        fprintf(stderr, "Invalid mode: must be 'e' or 'd': got '%c'\n", mode);
         return -1;
-    };
+    }
 
     // Open the device driver
     int fd = open(DEV_LOCATION, O_RDWR); // read and write
     if (fd < 0)
     {
-        printf("Device open error\n");
+        fprintf(stderr, "Device open error\n");
         return -1;
     }
-    printf("Device open success\n");
 
     // Write text to driver
     write(fd, text, strlen(text));
@@ -66,13 +57,9 @@ int main(int argc, char const *argv[])
     // Read from driver
     char *res = malloc(READ_BUFFER_SIZE);
     read(fd, res, strlen(text));
-    printf("Result: %s\n", res);
+    printf("%s\n", res);
 
-    // Now, do the reverse
-    ioctl(fd, mode == MODE_ENCRYPT ? MODE_DECRYPT : MODE_ENCRYPT);
-    read(fd, res, strlen(text));
-    printf("Result: %s\n", res);
-
+    // Close file descriptor
     close(fd);
     return 0;
 }
